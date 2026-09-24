@@ -1,13 +1,12 @@
 # Architecture patterns
 
 Before changing OSAC resource flows, tenancy, or shared contracts, read the
-`osac/AGENTS.md` instructions and the `AGENTS.md` of each affected component.
-In a standalone `osac` checkout, omit the `osac/` prefix.
+OSAC repository's root `AGENTS.md` and each affected component's `AGENTS.md`.
 
-- `osac/docs/ARCHITECTURE.md` describes the current resource hierarchy, service
+- `docs/ARCHITECTURE.md` describes the current resource hierarchy, service
   stack, and control loops.
-- `osac/docs/CONVENTIONS.md` describes cross-component dependencies.
-- `osac/docs/INTEGRATION-TESTING.md` and the affected component's `AGENTS.md`
+- `docs/CONVENTIONS.md` describes cross-component dependencies.
+- `docs/INTEGRATION-TESTING.md` and the affected component's `AGENTS.md`
   contain current test setup and coverage boundaries.
 
 Preserve tenant scoping with the `osac.openshift.io/tenant` annotation and,
