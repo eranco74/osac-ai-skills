@@ -1,65 +1,15 @@
-# Architecture Patterns
+# Architecture patterns
 
-## Multi-tenancy
+Before changing OSAC resource flows, tenancy, or shared contracts, read the
+`osac/AGENTS.md` instructions and the `AGENTS.md` of each affected component.
+In a standalone `osac` checkout, omit the `osac/` prefix.
 
-All resources include tenant isolation metadata:
-- `metadata.annotations["osac.openshift.io/tenant"]` for tenant scoping
-- `metadata.annotations["osac.openshift.io/owner-reference"]` for resource hierarchy
-- OPA policies enforce isolation at runtime
-- Never skip tenant isolation metadata in new resources
-- Use annotations for owner references, not separate fields
+- `osac/docs/ARCHITECTURE.md` describes the current resource hierarchy, service
+  stack, and control loops.
+- `osac/docs/CONVENTIONS.md` describes cross-component dependencies.
+- `osac/docs/INTEGRATION-TESTING.md` and the affected component's `AGENTS.md`
+  contain current test setup and coverage boundaries.
 
-## Resource Hierarchy
-
-```text
-Cluster Resources:
-  ClusterOrder → provisions OpenShift clusters via Hosted Control Planes
-
-Compute Resources:
-  ComputeInstance → KubeVirt VM, attached to Subnets + SecurityGroups
-
-Networking Resources:
-  NetworkClass (platform-defined, read-only for tenants)
-  └── VirtualNetwork (tenant L2 network with CIDR)
-        ├── Subnet (CIDR range within VirtualNetwork)
-        ├── SecurityGroup (firewall rules scoped to VirtualNetwork)
-        └── NATGateway (SNATs egress traffic through an ExternalIP)
-
-External IP Resources:
-  ExternalIPPool (platform-defined, external IP ranges)
-  ├── ExternalIP (allocated from pool)
-  └── ExternalIPAttachment (binds ExternalIP to ComputeInstance)
-
-Tenant Resources:
-  Tenant → namespace and resource isolation
-```
-
-Parent-child relationships use owner reference annotations (`osac.openshift.io/owner-reference`).
-
-## Service Stack (fulfillment-service)
-
-- PostgreSQL for persistent storage
-- gRPC with grpc-gateway for REST/JSON support
-- Controller-runtime for Kubernetes integration
-- OPA for authorization policies
-- Prometheus for metrics
-
-## Integration Testing (fulfillment-service)
-
-- Runs against a Kind cluster (named "osac-dev"), created via
-  `make -C osac-installer install-infra PLATFORM=kind PROFILE=dev NS=osac`
-- TLS with SNI routing via Envoy Gateway
-- Keycloak for authentication
-- Requires `/etc/hosts` entries:
-  - `127.0.0.1 keycloak.keycloak.svc.cluster.local`
-  - `127.0.0.1 fulfillment-api.osac.svc.cluster.local`
-  - `127.0.0.1 fulfillment-internal-api.osac.svc.cluster.local`
-- Clean up with: `make -C osac-installer uninstall PLATFORM=kind PROFILE=dev NS=osac`
-
-## Detailed References
-
-For deeper architecture, conventions, and structure analysis:
-- [`docs/architecture/`](https://github.com/osac-project/docs/tree/main/architecture) — high-level diagrams and design documents
-- [`enhancement-proposals/`](https://github.com/osac-project/enhancement-proposals) — RFCs and design proposals
-
-(Absolute GitHub links, not relative paths — this rule is vendored into multiple consumer repos with different sibling-clone layouts.)
+Preserve tenant scoping with the `osac.openshift.io/tenant` annotation and,
+where applicable, resource hierarchy with `osac.openshift.io/owner-reference`.
+Use the current docs as the source for resource names and integration commands.

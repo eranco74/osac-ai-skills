@@ -1,17 +1,14 @@
-# Request Path Tracing
+# Request path tracing
 
-When designing or implementing features triggered by external requests (API endpoints, CLI commands), trace the request path from the user-facing entry point to the handler before writing code. List each layer the request passes through (REST gateway, gRPC interceptors, middleware, server). Any layer that transforms, filters, or routes the request is an affected component - even if its code doesn't change.
+When designing or implementing a feature driven by an external API or CLI
+request, trace its input from the user-facing entry point to the handler.
 
-A layer that silently drops or ignores the feature's input is a bug that unit tests at the handler level won't catch.
+For OSAC, read the canonical `fulfillment-service/docs/REQUEST_PATH_TRACING.md`
+in the `osac` mono-repo before editing. From `osac-workspace`, the same file is
+at `osac/fulfillment-service/docs/REQUEST_PATH_TRACING.md`. It documents the
+current REST gateway header matcher and the boundary checks needed when input
+passes through routing, filtering, or transformation layers.
 
-## OSAC Example
-
-The fulfillment-service REST gateway uses grpc-gateway with `DefaultHeaderMatcher`, which only forwards permanent HTTP headers and `Grpc-Metadata-*` prefixed headers to gRPC metadata. Custom HTTP headers are silently dropped. When a feature relies on a custom header reaching the gRPC server, the gateway's header matcher configuration must be checked and updated.
-
-Request path for REST API calls:
-
-```text
-HTTP client → REST gateway (grpc-gateway mux) → gRPC interceptors → server handler
-```
-
-In the `fulfillment-service` component, check `internal/cmd/service/start/restgateway/start_rest_gateway_cmd.go` for gateway configuration when adding new headers. (Component-relative path — this rule is vendored into consumers where `fulfillment-service` sits at different depths, e.g. `fulfillment-service/` directly under `osac/`, or `osac/fulfillment-service/` under `osac-workspace/`.)
+The REST gateway's default header matcher does not forward arbitrary custom
+HTTP headers. Check the mux's custom matcher for each new header, and test that
+the value reaches the gRPC server through the REST path.
